@@ -10,11 +10,11 @@ layer {
   transform_param {
     mirror: true
     crop_size: 224
-    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+    mean_file: "/tmp/imagenet_mean_small.binaryproto"
   }
   data_param {
-    source: "examples/imagenet/ilsvrc12_train_lmdb"
-    batch_size: 50
+    source: "/tmp/ilsvrc12_train_small_lmdb"
+    batch_size: 64
     backend: LMDB
     prefetch: 2
   }
@@ -30,10 +30,10 @@ layer {
   transform_param {
     mirror: false
     crop_size: 224
-    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+    mean_file: "/tmp/imagenet_mean_small.binaryproto"
   }
   data_param {
-    source: "examples/imagenet/ilsvrc12_val_lmdb"
+    source: "/tmp/ilsvrc12_val_small_lmdb"
     batch_size: 50
     backend: LMDB
   }
