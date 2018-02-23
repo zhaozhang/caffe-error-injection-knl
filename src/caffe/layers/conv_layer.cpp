@@ -72,6 +72,8 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
+    
+
 #ifdef _OPENMP
     #pragma omp parallel if(this->num_of_threads_ > 1) num_threads(this->num_of_threads_)
     {

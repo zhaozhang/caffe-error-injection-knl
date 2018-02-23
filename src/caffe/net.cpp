@@ -1371,17 +1371,62 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
 }
 
 
+extern "C" int step_cur, mpi_rank, Active, Active_Layer;
+//extern "C" __thread int Active;
+extern "C" int mut_step, mut_layer_fp, mut_layer_bp, mut_param_set, mut_layer_fp_idx, mut_layer_bp_idx, mut_param_set_idx, mut_bit;
+extern "C" int bit_mask[32];
+extern "C" int Clamp_On;
+extern "C" float Data_Range;
+
+void Flip_Bit(void *addr)
+{
+  int *p;
+  float *fp;
+
+  p = (int *)addr;
+  fp = (float *)addr;
+
+  if(mut_layer_fp >= 0) LOG(INFO) << "DBG: step_cur = " << step_cur << "  MUT_STEP =" << mut_step << "  mut_layer_fp = " << mut_layer_fp;
+  if(mut_layer_bp >= 0) LOG(INFO) << "DBG: step_cur = " << step_cur << "  MUT_STEP =" << mut_step << "  mut_layer_bp = " << mut_layer_bp;
+  if(mut_param_set >= 0) LOG(INFO) << "DBG: step_cur = " << step_cur << "  MUT_STEP =" << mut_step << "  mut_param_set = " << mut_param_set;
+
+  LOG(INFO) << "DBG: Before mutation " << *fp;
+
+//  *p = *p ^ bit_mask[mut_bit];
+  *fp = 1.23E30;
+
+  LOG(INFO) << "DBG: After  mutation " << *fp;
+}
 
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+  float *mut_bot_data;
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
+
+  Active = 0;
   for (int i = start; i <= end; ++i) {
     LAYER_TIMING_START(forward, i);
     PERFORMANCE_MEASUREMENT_BEGIN();
 
+    if( (step_cur == mut_step) && (mpi_rank == 0) && (mut_layer_fp==i) && (i>=1) ) {
+//        bottom_vecs_[i][0]->mutable_cpu_data()[0] = 1.0E30;
+        mut_bot_data = (float*)bottom_vecs_[i][0]->mutable_cpu_data();
+//        mut_bot_data[0] = 1.0E30;
+//        mut_bot_data[1] = 1.27;
+//        const Dtype *p;
+//        p = (const Dtype *)(bottom_vecs_[i][0]->cpu_data());
+//        LOG(INFO) << "DBG: p[0] = " << p[0] << " p[1] = " << p[1];
+        if( (mut_layer_fp_idx >=0) && (mut_layer_fp_idx < bottom_vecs_[i][0]->count()) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_fp_idx])));
+        LOG(INFO) << "DBG: After Flip_Bit() in Forward.";
+        Active = 1;
+        Active_Layer = i;
+    }
+
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+
+    Active = 0;
 
     PERFORMANCE_MEASUREMENT_END((std::string("FW_") + layer_names_[i]).c_str());
     LAYER_TIMING_STOP(forward, i);
@@ -1425,11 +1470,83 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
 }
 
 template <typename Dtype>
+void Net<Dtype>::Print_Layer_Info(void)
+{
+  int i, nLayers, nParamSets;
+
+  nLayers=layers_.size()-1;
+  nParamSets = learnable_params().size();
+
+  if( (step_cur == 1) && (mpi_rank == 0) ) {  
+    for(i = 0; i<= nLayers; i++) {
+      LOG(INFO) << "DBG: Layer info, id: " << i << " name = " << layer_names()[i] << " output type = " << layers_[i]->type() 
+        << "  size = " << top_vecs_[i][0]->count() << " (" << top_vecs_[i][0]->num() << ", " << top_vecs_[i][0]->channels() << ", " 
+        << top_vecs_[i][0]->height() << ", " << top_vecs_[i][0]->width() << ")" ;
+    }
+
+    for(i = 0; i<= nLayers; i++) {
+      if (layer_need_backward_[i]) {
+        LOG(INFO) << "DBG: layer " << i << " supports Backward propagation. Type: " << layers_[i]->type() << ".";
+      }
+    }
+
+    LOG(INFO) << "DBG: Output parameters info.";
+    for (int param_id = 0; param_id < nParamSets; ++param_id) {
+        LOG(INFO) << "DBG: " << param_id << "  size = " << learnable_params()[param_id]->count()
+            << " (" << learnable_params()[param_id]->num() << ", " << learnable_params()[param_id]->channels() << ", "
+            << learnable_params()[param_id]->height() << ", " << learnable_params()[param_id]->width() << ")";
+    }
+
+    // env boundary check 
+    
+    if(mut_layer_fp > nLayers) {
+      LOG(INFO) << "Warning:  MUT_LAYER_FP is TOO large. MUT_LAYER_FP = " << mut_layer_fp << ". It will be set " << nLayers << ".";
+      mut_layer_fp = nLayers;
+    }
+    if(mut_layer_bp > nLayers) {
+      LOG(INFO) << "Warning:  MUT_LAYER_BP is TOO large. MUT_LAYER_BP = " << mut_layer_bp << ". It will be set " << nLayers << ".";
+      mut_layer_bp = nLayers;
+    }
+
+    if(mut_layer_bp == 0 ) {
+      LOG(INFO) << "Warning:  MUT_LAYER_BP is equal 0 which does not do Backward. It will be set 1.";
+      mut_layer_bp = 1;
+    }
+
+    if(mut_param_set >= nParamSets) {
+      LOG(INFO) << "Warning:  MUT_PARAM_SET is TOO large. MUT_PARAM_SET = " << mut_param_set << ". It will be set " << nParamSets-1 << ".";
+      mut_param_set = nParamSets-1;
+    }
+
+/*
+    if(mut_layer_fp_idx >= bottom_vecs_[mut_layer_fp][0]->count() ) {
+      LOG(INFO) << "Warning:  MUT_LAYER_FP_IDX is too large. MUT_LAYER_FP_IDX = " << mut_layer_fp_idx << "  size = " << bottom_vecs_[mut_layer_fp][0]->count();
+      mut_layer_fp_idx = bottom_vecs_[mut_layer_fp][0]->count() - 1;
+    }
+    if(mut_layer_bp_idx >= top_vecs_[mut_layer_bp][0]->count() ) {
+      LOG(INFO) << "Warning:  MUT_LAYER_BP_IDX is too large. MUT_LAYER_BP_IDX = " << mut_layer_bp_idx << "  size = " << top_vecs_[mut_layer_bp][0]->count();
+      mut_layer_bp_idx = top_vecs_[mut_layer_bp][0]->count() - 1;
+    }
+*/
+  }
+
+}
+
+
+template <typename Dtype>
 void Net<Dtype>::BackwardFromTo(int start, int end) {
+  float *mut_bot_data;
+
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
+      if( (step_cur == mut_step) && (mpi_rank<=0) && (mut_layer_bp==i) && (i>=1) ) {
+        mut_bot_data = (float*)bottom_vecs_[i][0]->mutable_cpu_data();
+        if( (mut_layer_bp_idx >=0) && (mut_layer_bp_idx < bottom_vecs_[i][0]->count()) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_bp_idx])));
+        LOG(INFO) << "DBG: After Flip_Bit() in Backward.";
+      }
+
 
       LAYER_TIMING_START(backward, i);
       PERFORMANCE_MEASUREMENT_BEGIN();

@@ -414,6 +414,8 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+extern "C" int step_cur, mut_step, mpi_rank, Active, Active_Layer, mut_layer_fp, mut_layer_fp_idx;
+
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Forward_cpu(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -421,6 +423,13 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
   size_t n, g;
   size_t iw, ih, ic;
   size_t ow, oh, oc;
+
+//   LOG(INFO) << "DBG: in MKLDNNConvolutionLayer::Forward_cpu, step = " << step_cur;
+  if( (step_cur == mut_step) && (mpi_rank == 0) && (Active) && (Active_Layer == mut_layer_fp) ) {
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+      LOG(INFO) << "DBG: In MKLConvolutionLayer::Forward_cpu, mutated data = " << bottom_data[mut_layer_fp_idx] << ".";
+  }
+
 
   g  = this->group_;
   n  = this->num_;

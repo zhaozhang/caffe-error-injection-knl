@@ -48,6 +48,8 @@
 #include <utility>
 #include <vector>
 #include <gflags/gflags.h>
+#include "caffe/error.hpp"
+
 
 #ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)

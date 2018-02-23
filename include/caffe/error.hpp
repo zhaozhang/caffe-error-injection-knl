@@ -1,6 +1,7 @@
 int step_cur=-1;
-__thread int deviceid=-1;
-__thread int Active=0;
+int mpi_rank=-1;
+int Active=0;
+int Active_Layer=-1;
 int mut_step=-1;
 int mut_layer_fp=-1;
 int mut_layer_bp=-1;

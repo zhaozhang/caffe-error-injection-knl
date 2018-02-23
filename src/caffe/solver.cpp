@@ -273,6 +273,8 @@ Dtype Solver<Dtype>::ForwardBackward() {
   return loss / param_.iter_size();
 }
 
+extern "C" int step_cur;
+
 template <typename Dtype>
 void Solver<Dtype>::Step(int iters) {
   const int start_iter = iter_;
@@ -281,7 +283,10 @@ void Solver<Dtype>::Step(int iters) {
   losses_.clear();
   smoothed_loss_ = 0;
 
+  step_cur = iter_;
+
   while (iter_ < stop_iter) {
+    step_cur = iter_;
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())
         && Caffe::root_solver()) {
@@ -367,6 +372,7 @@ void Solver<Dtype>::Step(int iters) {
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
     ++iter_;
+    step_cur = iter_;
 
     SolverAction::Enum request = GetRequestedAction();
 

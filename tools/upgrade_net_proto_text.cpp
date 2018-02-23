@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "caffe/error.hpp"
 
 using std::ofstream;
 

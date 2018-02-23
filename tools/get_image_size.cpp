@@ -58,7 +58,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
+
 #include "caffe/util/io.hpp"
+
+#include "caffe/error.hpp"
+
 
 using namespace caffe;  // NOLINT(build/namespaces)
 

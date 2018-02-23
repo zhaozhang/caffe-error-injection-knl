@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "caffe/caffe.hpp"
+#include "caffe/error.hpp"
 
 int main(int argc, char** argv) {
   LOG(FATAL) << "Deprecated. Use caffe train --solver=... "

@@ -53,6 +53,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/format.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include "caffe/error.hpp"
+
 #ifdef USE_LEVELDB
 #include "leveldb/db.h"
 

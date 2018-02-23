@@ -47,6 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <utility>
 #include <vector>
+#include "caffe/error.hpp"
+
 
 #ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)

@@ -619,11 +619,22 @@ void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
     Dtype local_rate);
 #endif
 
+extern "C" int step_cur, mpi_rank, mut_step, mut_param_set, mut_param_set_idx;
+extern void Flip_Bit(void *addr);
+
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * GetLocalRate(param_id);
+
+  float *mut_param;
+  if( (step_cur == mut_step) && (mpi_rank == 0) && (param_id==mut_param_set) ) {
+    mut_param = (float *)history_[param_id]->mutable_cpu_data();
+    if( (mut_param_set_idx >=0) && (mut_param_set_idx < history_[param_id]->count()) ) Flip_Bit((void*)(&(mut_param[mut_param_set_idx])));
+    LOG(INFO) << "DBG: After Flip_Bit() in ComputeUpdateValue.";
+  }
+
 
   if (this->param_.warmup_iter() > 0 &&
       this->iter_ < this->param_.warmup_iter()) {

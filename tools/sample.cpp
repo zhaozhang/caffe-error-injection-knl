@@ -51,6 +51,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/quant/quantization.hpp"
 
+#include "caffe/error.hpp"
+
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;

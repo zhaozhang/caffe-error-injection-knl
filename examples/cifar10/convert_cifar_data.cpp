@@ -54,6 +54,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/format.hpp"
+#include "caffe/error.hpp"
+
 
 using caffe::Datum;
 using boost::scoped_ptr;

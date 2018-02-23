@@ -61,6 +61,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
 
+#include "caffe/error.hpp"
+
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using boost::scoped_ptr;

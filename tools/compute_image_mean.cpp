@@ -49,6 +49,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
 
+#include "caffe/error.hpp"
+
+
 using namespace caffe;  // NOLINT(build/namespaces)
 
 using std::max;
