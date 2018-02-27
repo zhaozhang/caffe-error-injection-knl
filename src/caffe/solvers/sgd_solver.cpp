@@ -207,6 +207,9 @@ void SGDSolver<Dtype>::ClipGradients() {
   }
 }
 
+extern "C" int step_cur, mpi_rank, mut_step, mut_param_set, mut_param_set_idx;
+extern void Flip_Bit(void *addr);
+
 template <typename Dtype>
 void SGDSolver<Dtype>::PrintLearningRate() {
   CHECK(Caffe::root_solver());
@@ -240,10 +243,20 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 #endif
 }
 
+
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
+//  LOG(INFO) << "DBG: step " << step_cur << " in ApplyUpdate(int param_id).";
   CHECK(Caffe::root_solver());
   Dtype rate = GetLearningRate();
+
+  float *mut_param;
+  if( (step_cur == mut_step) && (mpi_rank == 0) && (param_id==mut_param_set) ) {
+    mut_param = (float *)history_[param_id]->mutable_cpu_data();
+    if( (mut_param_set_idx >=0) && (mut_param_set_idx < history_[param_id]->count()) ) Flip_Bit((void*)(&(mut_param[mut_param_set_idx])));
+    LOG(INFO) << "DBG: After Flip_Bit() in ApplyUpdate(int param_id).";
+  }
+
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: raw delwt:");
 
@@ -257,7 +270,7 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   if ((Caffe::mode() == Caffe::CPU) && (this->type() == string("SGD")))
   {
     //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD";
-    //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD";
+//    LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD. step " << step_cur;
     SGDFusion(param_id, rate);
     return;
   }
@@ -619,21 +632,18 @@ void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
     Dtype local_rate);
 #endif
 
-extern "C" int step_cur, mpi_rank, mut_step, mut_param_set, mut_param_set_idx;
-extern void Flip_Bit(void *addr);
-
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * GetLocalRate(param_id);
 
-  float *mut_param;
-  if( (step_cur == mut_step) && (mpi_rank == 0) && (param_id==mut_param_set) ) {
-    mut_param = (float *)history_[param_id]->mutable_cpu_data();
-    if( (mut_param_set_idx >=0) && (mut_param_set_idx < history_[param_id]->count()) ) Flip_Bit((void*)(&(mut_param[mut_param_set_idx])));
-    LOG(INFO) << "DBG: After Flip_Bit() in ComputeUpdateValue.";
-  }
+//  float *mut_param;
+//  if( (step_cur == mut_step) && (mpi_rank == 0) && (param_id==mut_param_set) ) {
+//    mut_param = (float *)history_[param_id]->mutable_cpu_data();
+//    if( (mut_param_set_idx >=0) && (mut_param_set_idx < history_[param_id]->count()) ) Flip_Bit((void*)(&(mut_param[mut_param_set_idx])));
+//    LOG(INFO) << "DBG: After Flip_Bit() in ComputeUpdateValue.";
+//  }
 
 
   if (this->param_.warmup_iter() > 0 &&

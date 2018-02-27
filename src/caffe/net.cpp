@@ -64,6 +64,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/remove_batch_norm.hpp"
 #include "caffe/util/apply_bn_stats_batch_size.hpp"
 
+#include <mkl.h>
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -1392,8 +1393,12 @@ void Flip_Bit(void *addr)
 
   LOG(INFO) << "DBG: Before mutation " << *fp;
 
-//  *p = *p ^ bit_mask[mut_bit];
-  *fp = 1.23E30;
+  *p = *p ^ bit_mask[mut_bit];
+//  *fp = 1.23E30;
+
+//  for(int i=0; i<10; i++) {
+//     *(fp+i) = 1.23E30;
+//  }
 
   LOG(INFO) << "DBG: After  mutation " << *fp;
 }
@@ -1423,8 +1428,29 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
         Active = 1;
         Active_Layer = i;
     }
+/*
+    float max_bot, max_top;
+    int idx;
+    if( (step_cur>=mut_step) && (i>=1) ) {
+      idx = cblas_isamax(bottom_vecs_[i][0]->count(), (const float *)(bottom_vecs_[i][0]->cpu_data()), 1);
+      max_bot = bottom_vecs_[i][0]->cpu_data()[idx];
+      idx = cblas_isamax(top_vecs_[i][0]->count(), (const float *)(top_vecs_[i][0]->cpu_data()), 1);
+      max_top = top_vecs_[i][0]->cpu_data()[idx];
 
+      LOG(INFO) << "DBG: step " << step_cur << " layer " << i << " before FP max_bot = " << max_bot << " max_top = " << max_top;
+    }
+*/
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+/*
+    if( (step_cur>=mut_step) && (i>=1) ) {
+      idx = cblas_isamax(bottom_vecs_[i][0]->count(), (const float *)(bottom_vecs_[i][0]->cpu_data()), 1);
+      max_bot = bottom_vecs_[i][0]->cpu_data()[idx];
+      idx = cblas_isamax(top_vecs_[i][0]->count(), (const float *)(top_vecs_[i][0]->cpu_data()), 1);
+      max_top = top_vecs_[i][0]->cpu_data()[idx];
+
+      LOG(INFO) << "DBG: step " << step_cur << " layer " << i << " after FP max_bot = " << max_bot << " max_top = " << max_top;
+    }
+*/
 
     Active = 0;
 
@@ -1550,9 +1576,32 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 
       LAYER_TIMING_START(backward, i);
       PERFORMANCE_MEASUREMENT_BEGIN();
+/*
+    float max_bot, max_top;
+    int idx;
+    if( (step_cur>=mut_step) && (i>=1) ) {
+      idx = cblas_isamax(bottom_vecs_[i][0]->count(), (const float *)(bottom_vecs_[i][0]->cpu_data()), 1);
+      max_bot = bottom_vecs_[i][0]->cpu_data()[idx];
+      idx = cblas_isamax(top_vecs_[i][0]->count(), (const float *)(top_vecs_[i][0]->cpu_data()), 1);
+      max_top = top_vecs_[i][0]->cpu_data()[idx];
+
+      LOG(INFO) << "DBG: step " << step_cur << " layer " << i << " before BP max_bot = " << max_bot << " max_top = " << max_top;
+    }
+*/
+
 
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+/*
+    if( (step_cur>=mut_step) && (i>=1) ) {
+      idx = cblas_isamax(bottom_vecs_[i][0]->count(), (const float *)(bottom_vecs_[i][0]->cpu_data()), 1);
+      max_bot = bottom_vecs_[i][0]->cpu_data()[idx];
+      idx = cblas_isamax(top_vecs_[i][0]->count(), (const float *)(top_vecs_[i][0]->cpu_data()), 1);
+      max_top = top_vecs_[i][0]->cpu_data()[idx];
+
+      LOG(INFO) << "DBG: step " << step_cur << " layer " << i << " after BP max_bot = " << max_bot << " max_top = " << max_top;
+    }
+*/
 
       PERFORMANCE_MEASUREMENT_END((std::string("BW_")+layer_names_[i]).c_str());
       LAYER_TIMING_STOP(backward, i);

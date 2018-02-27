@@ -52,7 +52,7 @@ namespace bp = boost::python;
 #include "boost/algorithm/string.hpp"
 #include "boost/make_shared.hpp"
 #include "caffe/caffe.hpp"
-//#include "caffe/error.hpp"
+#include "caffe/error.hpp"
 #include "caffe/training_utils.hpp"
 #include "caffe/util/performance.hpp"
 #include "caffe/util/signal_handler.h"
@@ -712,22 +712,6 @@ int compare() {
 }
 RegisterBrewFunction(compare);
 
-int step_cur=-1;
-int mpi_rank=-1;
-int Active=0, Active_Layer=-1;
-//__thread int deviceid=-1;
-//__thread int Active=0;
-int mut_step=-1;
-int mut_layer_fp=-1;
-int mut_layer_bp=-1;
-int mut_param_set=-1;
-int mut_layer_fp_idx=-1;
-int mut_layer_bp_idx=-1;
-int mut_param_set_idx=-1;
-int mut_bit=-1;
-int bit_mask[32];
-int Clamp_On=0;
-float Data_Range=1.0E10;
 
 void Init_Bit_Mask(void)
 {
