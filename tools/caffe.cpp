@@ -52,7 +52,6 @@ namespace bp = boost::python;
 #include "boost/algorithm/string.hpp"
 #include "boost/make_shared.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe/error.hpp"
 #include "caffe/training_utils.hpp"
 #include "caffe/util/performance.hpp"
 #include "caffe/util/signal_handler.h"
@@ -64,6 +63,8 @@ namespace bp = boost::python;
 #include "caffe/multinode/multi_sync.hpp"
 #include "caffe/multinode/async_param_server.hpp"
 #endif /* USE_MLSL */
+
+#include "caffe/error.hpp"
 
 using caffe::Blob;
 using caffe::Caffe;
