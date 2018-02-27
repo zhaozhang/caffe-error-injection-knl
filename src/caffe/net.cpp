@@ -1507,7 +1507,10 @@ void Net<Dtype>::Print_Layer_Info(void)
     for(i = 0; i<= nLayers; i++) {
       LOG(INFO) << "DBG: Layer info, id: " << i << " name = " << layer_names()[i] << " output type = " << layers_[i]->type() 
         << "  size = " << top_vecs_[i][0]->count() << " (" << top_vecs_[i][0]->num() << ", " << top_vecs_[i][0]->channels() << ", " 
-        << top_vecs_[i][0]->height() << ", " << top_vecs_[i][0]->width() << ")" ;
+        << top_vecs_[i][0]->height() << ", " << top_vecs_[i][0]->width() << ").  param set number = " << get_layer_learnable_param_ids(i).size();
+      for(int j=0; j<get_layer_learnable_param_ids(i).size(); j++) {
+        LOG(INFO) << "DBG:        Layer " << i << "  Param " << j << " size " << learnable_params()[get_layer_learnable_param_ids(i)[j]]->count() << " id = " << get_layer_learnable_param_ids(i)[j];
+      }
     }
 
     for(i = 0; i<= nLayers; i++) {
