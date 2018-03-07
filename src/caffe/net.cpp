@@ -1410,6 +1410,8 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
 
+  Print_Layer_Info();
+
   Active = 0;
   for (int i = start; i <= end; ++i) {
     LAYER_TIMING_START(forward, i);

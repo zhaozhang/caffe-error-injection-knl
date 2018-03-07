@@ -128,7 +128,7 @@ class Net {
   Dtype ForwardBackward() {
     Dtype loss;
 
-    Print_Layer_Info();
+//    Print_Layer_Info();
     Forward(&loss);
     Backward();
     return loss;
