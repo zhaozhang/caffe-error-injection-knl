@@ -1427,6 +1427,8 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 //        LOG(INFO) << "DBG: p[0] = " << p[0] << " p[1] = " << p[1];
         if( (mut_layer_fp_idx >=0) && (mut_layer_fp_idx < bottom_vecs_[i][0]->count()) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_fp_idx])));
         LOG(INFO) << "DBG: After Flip_Bit() in Forward.";
+        LOG(INFO) << "DBG: Updated data = " << bottom_vecs_[i][0]->mutable_prv_data()[mut_layer_bp_idx];
+
         Active = 1;
         Active_Layer = i;
     }
@@ -1576,8 +1578,9 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
         mut_bot_data = (float*)bottom_vecs_[i][0]->mutable_cpu_data();
         if( (mut_layer_bp_idx >=0) && (mut_layer_bp_idx < bottom_vecs_[i][0]->count()) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_bp_idx])));
         LOG(INFO) << "DBG: After Flip_Bit() in Backward.";
+        LOG(INFO) << "DBG: Updated data = " << bottom_vecs_[i][0]->mutable_prv_data()[mut_layer_bp_idx];
       }
-
+      Active_Layer = i;
 
       LAYER_TIMING_START(backward, i);
       PERFORMANCE_MEASUREMENT_BEGIN();
