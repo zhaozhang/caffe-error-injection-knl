@@ -1372,7 +1372,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
 }
 
 
-extern "C" int step_cur, mpi_rank, Active, Active_Layer;
+extern "C" int Is_In_Test, step_cur, mpi_rank, Active, Active_Layer;
 //extern "C" __thread int Active;
 extern "C" int mut_step, mut_layer_fp, mut_layer_bp, mut_param_set, mut_layer_fp_idx, mut_layer_bp_idx, mut_param_set_idx, mut_bit;
 extern "C" int bit_mask[32];
@@ -1425,7 +1425,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 //        const Dtype *p;
 //        p = (const Dtype *)(bottom_vecs_[i][0]->cpu_data());
 //        LOG(INFO) << "DBG: p[0] = " << p[0] << " p[1] = " << p[1];
-        if( (mut_layer_fp_idx >=0) && (mut_layer_fp_idx < bottom_vecs_[i][0]->count()) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_fp_idx])));
+        if( (mut_layer_fp_idx >=0) && (mut_layer_fp_idx < bottom_vecs_[i][0]->count()) && (Is_In_Test == 0) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_fp_idx])));
         LOG(INFO) << "DBG: After Flip_Bit() in Forward.";
         LOG(INFO) << "DBG: Updated data = " << bottom_vecs_[i][0]->mutable_prv_data()[mut_layer_bp_idx];
 
@@ -1576,7 +1576,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
     if (layer_need_backward_[i]) {
       if( (step_cur == mut_step) && (mpi_rank<=0) && (mut_layer_bp==i) && (i>=1) ) {
         mut_bot_data = (float*)bottom_vecs_[i][0]->mutable_cpu_data();
-        if( (mut_layer_bp_idx >=0) && (mut_layer_bp_idx < bottom_vecs_[i][0]->count()) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_bp_idx])));
+        if( (mut_layer_bp_idx >=0) && (mut_layer_bp_idx < bottom_vecs_[i][0]->count()) && (Is_In_Test == 0) ) Flip_Bit((void*)(&(mut_bot_data[mut_layer_bp_idx])));
         LOG(INFO) << "DBG: After Flip_Bit() in Backward.";
         LOG(INFO) << "DBG: Updated data = " << bottom_vecs_[i][0]->mutable_prv_data()[mut_layer_bp_idx];
       }

@@ -13,4 +13,5 @@ int mut_bit=-1;
 int bit_mask[32];
 int Clamp_On=0;
 float Data_Range=1.0E10;
+int Is_In_Test=0;
 

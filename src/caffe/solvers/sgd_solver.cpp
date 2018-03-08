@@ -207,7 +207,7 @@ void SGDSolver<Dtype>::ClipGradients() {
   }
 }
 
-extern "C" int step_cur, mpi_rank, mut_step, mut_param_set, mut_param_set_idx;
+extern "C" int Is_In_Test, step_cur, mpi_rank, mut_step, mut_param_set, mut_param_set_idx;
 extern void Flip_Bit(void *addr);
 
 template <typename Dtype>
@@ -253,7 +253,7 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   float *mut_param;
   if( (step_cur == mut_step) && (mpi_rank == 0) && (param_id==mut_param_set) ) {
     mut_param = (float *)history_[param_id]->mutable_cpu_data();
-    if( (mut_param_set_idx >=0) && (mut_param_set_idx < history_[param_id]->count()) ) Flip_Bit((void*)(&(mut_param[mut_param_set_idx])));
+    if( (mut_param_set_idx >=0) && (mut_param_set_idx < history_[param_id]->count()) && (Is_In_Test==0) ) Flip_Bit((void*)(&(mut_param[mut_param_set_idx])));
     LOG(INFO) << "DBG: After Flip_Bit() in ApplyUpdate(int param_id).";
   }
 

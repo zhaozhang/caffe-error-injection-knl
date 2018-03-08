@@ -273,7 +273,7 @@ Dtype Solver<Dtype>::ForwardBackward() {
   return loss / param_.iter_size();
 }
 
-extern "C" int step_cur;
+extern "C" int Is_In_Test, step_cur;
 
 template <typename Dtype>
 void Solver<Dtype>::Step(int iters) {
@@ -451,6 +451,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void Solver<Dtype>::TestAll() {
+  Is_In_Test = 1;
 #ifdef USE_MLSL
   for (int i = 0; i < callbacks_.size(); ++i) {
     callbacks_[i]->on_before_test();
@@ -472,6 +473,7 @@ void Solver<Dtype>::TestAll() {
     callbacks_[i]->on_after_test();
   }
 #endif
+  Is_In_Test = 0;
 }
 
 template <typename Dtype>
